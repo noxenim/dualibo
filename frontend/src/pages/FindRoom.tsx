@@ -1,14 +1,10 @@
-import { useMemo, useState } from "react";
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import {
   getRooms,
-  updateRoom,
   type StudyRoom,
-} from "../data/rooms";
+} from "../services/api";
 
 function formatTime(time: string): string {
   const [hoursString, minutes] = time.split(":");
@@ -45,10 +41,29 @@ function formatDate(date: string): string {
 }
 
 function FindRoom() {
-  const navigate = useNavigate();
-  const [rooms] = useState<StudyRoom[]>(getRooms());
-
+  const [rooms, setRooms] = useState<StudyRoom[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadRooms() {
+      try {
+        setLoading(true);
+        const data = await getRooms();
+        setRooms(data);
+      } catch (err) {
+        console.error(err);
+        setError(
+          "Unable to load study rooms. Make sure the backend is running."
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadRooms();
+  }, []);
 
   const filteredRooms = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -60,7 +75,9 @@ function FindRoom() {
     return rooms.filter(
       (room) =>
         room.topic.toLowerCase().includes(query) ||
-        room.description.toLowerCase().includes(query) ||
+        room.description
+          .toLowerCase()
+          .includes(query) ||
         room.host.toLowerCase().includes(query)
     );
   }, [rooms, search]);
@@ -119,22 +136,40 @@ function FindRoom() {
       </div>
 
       <section className="rooms">
-        {filteredRooms.length === 0 ? (
+        {loading && (
           <div className="empty-state">
-            <h2>No study rooms found</h2>
-
-            <p>
-              Try another search or create a room yourself.
-            </p>
-
-            <Link
-              to="/create"
-              className="button primary"
-            >
-              Create a Room
-            </Link>
+            <h2>Loading rooms...</h2>
           </div>
-        ) : (
+        )}
+
+        {!loading && error && (
+          <div className="empty-state">
+            <h2>Something went wrong</h2>
+            <p>{error}</p>
+          </div>
+        )}
+
+        {!loading &&
+          !error &&
+          filteredRooms.length === 0 && (
+            <div className="empty-state">
+              <h2>No study rooms found</h2>
+
+              <p>
+                Try another search or create a room yourself.
+              </p>
+
+              <Link
+                to="/create"
+                className="button primary"
+              >
+                Create a Room
+              </Link>
+            </div>
+          )}
+
+        {!loading &&
+          !error &&
           filteredRooms.map((room) => (
             <article
               className="room-card"
@@ -162,25 +197,23 @@ function FindRoom() {
                     {room.participants} / 2
                   </span>
 
-                  {room.cameraOn && (
+                  {room.camera_on && (
                     <span>Camera on</span>
                   )}
 
-                  {room.introEnabled && (
+                  {room.intro_enabled && (
                     <span>5 min intro</span>
                   )}
 
                   <span>
-                    {room.testEnabled
+                    {room.test_enabled
                       ? "Test enabled"
                       : "No test"}
                   </span>
                 </div>
 
                 <div className="room-tags">
-                  <span>
-                    {room.studyMode}
-                  </span>
+                  <span>{room.study_mode}</span>
 
                   {room.recurring && (
                     <span>Recurring</span>
@@ -191,29 +224,15 @@ function FindRoom() {
               <div className="room-host">
                 <span>by {room.host}</span>
 
-                <button
+                <Link
+                  to={`/room/${room.id}`}
                   className="button primary small"
-                  disabled={room.participants >= 2}
-                  onClick={() => {
-                    if (room.participants >= 2) {
-                      return;
-                    }
-
-                    updateRoom(room.id, {
-                      participants: room.participants + 1,
-                    });
-
-                    navigate(`/room/${room.id}`);
-                  }}
                 >
-                  {room.participants >= 2
-                    ? "Full"
-                    : "Join Room"}
-                </button>
+                  Join Room
+                </Link>
               </div>
             </article>
-          ))
-        )}
+          ))}
       </section>
     </main>
   );

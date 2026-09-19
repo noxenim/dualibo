@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import {
-  createRoomId,
-  saveRoom,
-  type StudyMode,
-} from "../data/rooms";
+import { createRoom } from "../services/api";
 
 function CreateRoom() {
   const navigate = useNavigate();
@@ -21,51 +17,62 @@ function CreateRoom() {
   const [testEnabled, setTestEnabled] = useState(false);
 
   const [studyMode, setStudyMode] =
-    useState<StudyMode>("Occasional discussion");
+    useState("Occasional discussion");
 
   const [recurring, setRecurring] = useState(false);
 
-  function handleCreateRoom(
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleCreateRoom(
     event: React.FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
+    setError("");
+
     if (!topic.trim()) {
-      alert("Please enter a topic.");
+      setError("Please enter a topic.");
       return;
     }
 
     if (!date) {
-      alert("Please select a date.");
+      setError("Please select a date.");
       return;
     }
 
     if (!time) {
-      alert("Please select a start time.");
+      setError("Please select a start time.");
       return;
     }
 
-    const newRoom = {
-      id: createRoomId(),
-      topic: topic.trim(),
-      description:
-        goal.trim() || "Study session",
-      goal: goal.trim(),
-      date,
-      time,
-      duration,
-      host: "You",
-      participants: 1,
-      cameraOn,
-      introEnabled,
-      testEnabled,
-      studyMode,
-      recurring,
-    };
+    try {
+      setLoading(true);
 
-    saveRoom(newRoom);
+      await createRoom({
+        topic: topic.trim(),
+        description: goal.trim() || "Study session",
+        goal: goal.trim() || null,
+        date,
+        time,
+        duration,
+        host: "You",
+        camera_on: cameraOn,
+        intro_enabled: introEnabled,
+        test_enabled: testEnabled,
+        study_mode: studyMode,
+        recurring,
+      });
 
-    navigate("/find");
+      navigate("/find");
+    } catch (err) {
+      console.error(err);
+      setError(
+        "Unable to create the room. Make sure the backend is running."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -174,7 +181,6 @@ function CreateRoom() {
             <div className="setting">
               <div>
                 <strong>Camera</strong>
-
                 <p>
                   Both participants must have their camera on.
                 </p>
@@ -192,7 +198,6 @@ function CreateRoom() {
             <div className="setting">
               <div>
                 <strong>5-minute introduction</strong>
-
                 <p>
                   Start with a short conversation before
                   studying.
@@ -211,7 +216,6 @@ function CreateRoom() {
             <div className="setting">
               <div>
                 <strong>End-of-session test</strong>
-
                 <p>
                   Both participants can create a short test
                   for each other.
@@ -230,7 +234,6 @@ function CreateRoom() {
             <div className="setting">
               <div>
                 <strong>Study mode</strong>
-
                 <p>
                   How much do you want to talk during the
                   session?
@@ -240,22 +243,12 @@ function CreateRoom() {
               <select
                 value={studyMode}
                 onChange={(event) =>
-                  setStudyMode(
-                    event.target.value as StudyMode
-                  )
+                  setStudyMode(event.target.value)
                 }
               >
-                <option value="Silent">
-                  Silent
-                </option>
-
-                <option value="Occasional discussion">
-                  Occasional discussion
-                </option>
-
-                <option value="Discussion welcome">
-                  Discussion welcome
-                </option>
+                <option>Silent</option>
+                <option>Occasional discussion</option>
+                <option>Discussion welcome</option>
               </select>
             </div>
           </section>
@@ -284,11 +277,25 @@ function CreateRoom() {
             </div>
           </section>
 
+          {error && (
+            <p
+              style={{
+                color: "#b42318",
+                fontFamily: "Arial, sans-serif",
+                fontSize: "13px",
+                marginTop: "20px",
+              }}
+            >
+              {error}
+            </p>
+          )}
+
           <button
             type="submit"
             className="button primary create-button"
+            disabled={loading}
           >
-            Create Room
+            {loading ? "Creating..." : "Create Room"}
           </button>
         </form>
       </section>
