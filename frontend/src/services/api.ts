@@ -61,3 +61,38 @@ export async function createRoom(
 
   return response.json();
 }
+export async function getRoom(
+  roomId: number
+): Promise<StudyRoom> {
+  const response = await fetch(
+    `${API_URL}/rooms/${roomId}`
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch study room.");
+  }
+
+  return response.json();
+}
+
+export async function joinRoom(
+  roomId: number
+): Promise<StudyRoom> {
+  const response = await fetch(
+    `${API_URL}/rooms/${roomId}/join`,
+    {
+      method: "POST",
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+
+    throw new Error(
+      errorData?.detail ||
+        "Unable to join the study room."
+    );
+  }
+
+  return response.json();
+}

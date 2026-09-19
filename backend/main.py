@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -77,3 +77,60 @@ def get_rooms(
     db: Session = Depends(get_db),
 ):
     return db.query(StudyRoom).all()
+
+
+@app.get(
+    "/rooms/{room_id}",
+    response_model=StudyRoomResponse,
+)
+def get_room(
+    room_id: int,
+    db: Session = Depends(get_db),
+):
+    room = (
+        db.query(StudyRoom)
+        .filter(StudyRoom.id == room_id)
+        .first()
+    )
+
+    if room is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Study room not found.",
+        )
+
+    return room
+
+
+@app.post(
+    "/rooms/{room_id}/join",
+    response_model=StudyRoomResponse,
+)
+def join_room(
+    room_id: int,
+    db: Session = Depends(get_db),
+):
+    room = (
+        db.query(StudyRoom)
+        .filter(StudyRoom.id == room_id)
+        .first()
+    )
+
+    if room is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Study room not found.",
+        )
+
+    if room.participants >= 2:
+        raise HTTPException(
+            status_code=409,
+            detail="This study room is already full.",
+        )
+
+    room.participants += 1
+
+    db.commit()
+    db.refresh(room)
+
+    return room

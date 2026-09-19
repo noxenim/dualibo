@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import {
   getRooms,
+  joinRoom,
   type StudyRoom,
 } from "../services/api";
 
@@ -41,6 +42,7 @@ function formatDate(date: string): string {
 }
 
 function FindRoom() {
+  const navigate = useNavigate();
   const [rooms, setRooms] = useState<StudyRoom[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -224,12 +226,29 @@ function FindRoom() {
               <div className="room-host">
                 <span>by {room.host}</span>
 
-                <Link
-                  to={`/room/${room.id}`}
+                <button
                   className="button primary small"
+                  disabled={room.participants >= 2}
+                  onClick={async () => {
+                    try {
+                      await joinRoom(room.id);
+
+                      navigate(`/room/${room.id}`);
+                    } catch (error) {
+                      console.error(error);
+
+                      alert(
+                        error instanceof Error
+                          ? error.message
+                          : "Unable to join room."
+                      );
+                    }
+                  }}
                 >
-                  Join Room
-                </Link>
+                  {room.participants >= 2
+                    ? "Full"
+                    : "Join Room"}
+                </button>
               </div>
             </article>
           ))}

@@ -6,9 +6,9 @@ import {
 } from "react-router-dom";
 
 import {
-  getRoomById,
+  getRoom,
   type StudyRoom,
-} from "../data/rooms";
+} from "../services/api";
 
 function formatTime(time: string): string {
   const [hoursString, minutes] = time.split(":");
@@ -22,7 +22,7 @@ function formatTime(time: string): string {
   return `${hours}:${minutes} ${period}`;
 }
 
-function StudyRoomPage                                                () {
+function StudyRoomPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
 
@@ -30,17 +30,46 @@ function StudyRoomPage                                                () {
     StudyRoom | undefined
   >();
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   useEffect(() => {
-    if (!roomId) {
-      return;
+    async function loadRoom() {
+      if (!roomId) {
+        return;
+      }
+
+      try {
+        const data = await getRoom(
+          Number(roomId)
+        );
+
+        setRoom(data);
+      } catch (error) {
+        console.error(error);
+
+        setError(
+          "Unable to load this study room."
+        );
+      } finally {
+        setLoading(false);
+      }
     }
 
-    const foundRoom = getRoomById(roomId);
-
-    setRoom(foundRoom);
+    loadRoom();
   }, [roomId]);
 
-  if (!room) {
+  if (loading) {
+    return (
+      <main className="study-room-page">
+        <div className="empty-state page-empty">
+          <h2>Loading study room...</h2>
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !room) {
     return (
       <main className="page">
         <nav className="navbar">
@@ -51,7 +80,8 @@ function StudyRoomPage                                                () {
           <h2>Room not found</h2>
 
           <p>
-            This study room doesn't exist anymore.
+            {error ||
+              "This study room doesn't exist anymore."}
           </p>
 
           <Link
@@ -72,9 +102,7 @@ function StudyRoomPage                                                () {
           paird
         </Link>
 
-        <span>
-          {room.topic}
-        </span>
+        <span>{room.topic}</span>
 
         <button
           className="button secondary"
@@ -93,7 +121,9 @@ function StudyRoomPage                                                () {
 
             <h1>{room.topic}</h1>
 
-            <p>{room.goal || room.description}</p>
+            <p>
+              {room.goal || room.description}
+            </p>
           </div>
 
           <div className="session-time">
@@ -132,28 +162,26 @@ function StudyRoomPage                                                () {
             <h2>Get ready to study</h2>
 
             <p>
-              Your study session is scheduled for{" "}
-              <strong>
-                {formatTime(room.time)}
-              </strong>
-              .
+              {room.participants === 2
+                ? "Your study partner has joined."
+                : "Waiting for a study partner to join."}
             </p>
           </div>
 
           <div className="session-settings">
-            {room.cameraOn && (
+            {room.camera_on && (
               <span>Camera on</span>
             )}
 
-            {room.introEnabled && (
+            {room.intro_enabled && (
               <span>5 min introduction</span>
             )}
 
-            {room.testEnabled && (
+            {room.test_enabled && (
               <span>End-of-session test</span>
             )}
 
-            <span>{room.studyMode}</span>
+            <span>{room.study_mode}</span>
           </div>
         </div>
       </section>
