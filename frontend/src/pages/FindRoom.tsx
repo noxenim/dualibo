@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 import {
   getRooms,
@@ -86,17 +87,7 @@ function FindRoom() {
 
   return (
     <main className="page">
-      <nav className="navbar">
-        <div className="logo">paird</div>
-
-        <div className="nav-links">
-          <Link to="/">Home</Link>
-          <Link to="/find">Find a Room</Link>
-          <Link to="/create">Create a Room</Link>
-        </div>
-
-        <div className="profile-placeholder">A</div>
-      </nav>
+      <Navbar />
 
       <section className="page-header">
         <div>

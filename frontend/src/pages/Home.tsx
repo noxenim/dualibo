@@ -1,21 +1,10 @@
 import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 function Home() {
   return (
     <main className="home">
-      <nav className="navbar">
-        <div className="logo">paird</div>
-
-        <div className="nav-links">
-          <Link to="/">Home</Link>
-          <Link to="/find">Find a Room</Link>
-          <Link to="/create">Create a Room</Link>
-        </div>
-
-        <div className="profile-placeholder">
-          A
-        </div>
-      </nav>
+      <Navbar />
 
       <section className="hero">
         <div className="hero-content">

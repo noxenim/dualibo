@@ -552,3 +552,109 @@ select {
   max-width: 700px;
   margin: 80px auto;
 }
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 40px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 430px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 42px;
+}
+
+.auth-logo {
+  display: inline-block;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 45px;
+}
+
+.auth-card h1 {
+  font-size: 42px;
+  font-weight: 500;
+  margin: 0 0 10px;
+}
+
+.auth-subtitle {
+  font-family: Arial, sans-serif;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 30px;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+
+.auth-card input {
+  width: 100%;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 5px;
+}
+
+.auth-error {
+  margin: 0;
+  color: #b42318;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+
+.auth-footer {
+  margin-top: 25px;
+  text-align: center;
+
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.auth-footer a {
+  text-decoration: underline;
+}
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+
+.nav-user-name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-logout {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.nav-logout:hover {
+  color: var(--text);
+}

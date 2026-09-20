@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
 import {
   Link,
   useNavigate,
@@ -72,9 +73,7 @@ function StudyRoomPage() {
   if (error || !room) {
     return (
       <main className="page">
-        <nav className="navbar">
-          <div className="logo">paird</div>
-        </nav>
+        <Navbar />
 
         <div className="empty-state page-empty">
           <h2>Room not found</h2>
