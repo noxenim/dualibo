@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
 
@@ -58,7 +58,6 @@ function CreateRoom() {
         date,
         time,
         duration,
-        host: "You",
         camera_on: cameraOn,
         intro_enabled: introEnabled,
         test_enabled: testEnabled,

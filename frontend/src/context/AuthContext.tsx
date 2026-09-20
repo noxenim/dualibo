@@ -76,10 +76,10 @@ export function AuthProvider({
     email: string,
     password: string
   ) {
-    const token = await loginUser(
+    const token = await loginUser({
       email,
-      password
-    );
+      password,
+    });
 
     saveToken(token);
 

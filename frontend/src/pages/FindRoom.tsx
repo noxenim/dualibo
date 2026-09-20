@@ -81,7 +81,7 @@ function FindRoom() {
         room.description
           .toLowerCase()
           .includes(query) ||
-        room.host.toLowerCase().includes(query)
+        room.host_name.toLowerCase().includes(query)
     );
   }, [rooms, search]);
 
@@ -215,7 +215,7 @@ function FindRoom() {
               </div>
 
               <div className="room-host">
-                <span>by {room.host}</span>
+                <span>by {room.host_name}</span>
 
                 <button
                   className="button primary small"
