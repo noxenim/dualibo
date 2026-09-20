@@ -26,6 +26,9 @@ export type StudyRoom = {
   test_enabled: boolean;
   study_mode: string;
   recurring: boolean;
+  is_host: boolean;
+  has_joined: boolean;
+  is_full: boolean;
 };
 
 export type CreateStudyRoom = {
@@ -146,10 +149,25 @@ export async function logoutUser(): Promise<void> {
 }
 
 export async function getRooms(): Promise<StudyRoom[]> {
-  const response = await fetch(`${API_URL}/rooms`);
+  const token = getToken();
+
+  const headers: HeadersInit = token
+    ? {
+        Authorization: `Bearer ${token}`,
+      }
+    : {};
+
+  const response = await fetch(
+    `${API_URL}/rooms`,
+    {
+      headers,
+    }
+  );
 
   if (!response.ok) {
-    throw new Error("Failed to fetch study rooms.");
+    throw new Error(
+      "Failed to fetch study rooms."
+    );
   }
 
   return response.json();
@@ -185,12 +203,25 @@ export async function createRoom(
 export async function getRoom(
   roomId: number
 ): Promise<StudyRoom> {
+  const token = getToken();
+
+  const headers: HeadersInit = token
+    ? {
+        Authorization: `Bearer ${token}`,
+      }
+    : {};
+
   const response = await fetch(
-    `${API_URL}/rooms/${roomId}`
+    `${API_URL}/rooms/${roomId}`,
+    {
+      headers,
+    }
   );
 
   if (!response.ok) {
-    throw new Error("Failed to fetch study room.");
+    throw new Error(
+      "Failed to fetch study room."
+    );
   }
 
   return response.json();

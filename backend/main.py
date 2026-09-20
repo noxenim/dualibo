@@ -1,10 +1,12 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from auth import (
     create_access_token,
     get_current_user,
+    get_optional_current_user,
     hash_password,
     verify_password,
 )
@@ -133,6 +135,43 @@ def login(
         "token_type": "bearer",
     }
 
+@app.post(
+    "/auth/token",
+    response_model=TokenResponse,
+)
+def token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    user = (
+        db.query(User)
+        .filter(
+            User.email == form_data.username.lower()
+        )
+        .first()
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password.",
+        )
+
+    if not verify_password(
+        form_data.password,
+        user.password_hash,
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password.",
+        )
+
+    token = create_access_token(user.id)
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+    }
 
 @app.get(
     "/auth/me",
@@ -153,7 +192,24 @@ def me(
 
 def room_to_response(
     room: StudyRoom,
+    current_user: User | None = None,
 ) -> dict:
+
+    is_host = (
+        current_user is not None
+        and room.host_user_id == current_user.id
+    )
+
+    has_joined = (
+        current_user is not None
+        and any(
+            participant.user_id == current_user.id
+            for participant in room.participants
+        )
+    )
+
+    is_full = len(room.participants) >= 2
+
     return {
         "id": room.id,
 
@@ -176,6 +232,10 @@ def room_to_response(
 
         "study_mode": room.study_mode,
         "recurring": room.recurring,
+
+        "is_host": is_host,
+        "has_joined": has_joined,
+        "is_full": is_full,
     }
 
 
@@ -230,6 +290,9 @@ def create_room(
     response_model=list[StudyRoomResponse],
 )
 def get_rooms(
+    current_user: User | None = Depends(
+        get_optional_current_user
+    ),
     db: Session = Depends(get_db),
 ):
     rooms = (
@@ -242,10 +305,12 @@ def get_rooms(
     )
 
     return [
-        room_to_response(room)
-        for room in rooms
-    ]
-
+    room_to_response(
+        room,
+        current_user,
+    )
+    for room in rooms
+]
 
 @app.get(
     "/rooms/{room_id}",
@@ -253,6 +318,9 @@ def get_rooms(
 )
 def get_room(
     room_id: int,
+    current_user: User | None = Depends(
+        get_optional_current_user
+    ),
     db: Session = Depends(get_db),
 ):
     room = (
@@ -267,7 +335,10 @@ def get_room(
             detail="Study room not found.",
         )
 
-    return room_to_response(room)
+    return room_to_response(
+    room,
+    current_user,
+)
 
 
 @app.post(
@@ -303,7 +374,10 @@ def join_room(
     )
 
     if already_joined:
-        return room_to_response(room)
+        return room_to_response(
+            room,
+            current_user,
+        )
 
     if len(room.participants) >= 2:
         raise HTTPException(
@@ -320,4 +394,7 @@ def join_room(
     db.commit()
     db.refresh(room)
 
-    return room_to_response(room)
+    return room_to_response(
+    room,
+    current_user,
+)

@@ -66,3 +66,7 @@ class StudyRoomResponse(BaseModel):
 
     study_mode: str
     recurring: bool
+
+    is_host: bool
+    has_joined: bool
+    is_full: bool
